@@ -44,24 +44,6 @@ PixlShaderOutput main(VertexShaderOutput input) {
     //TextureをSamplingする
     float4 textureColor = gTexture.Sample(gSampler, transformdUV.xy);
     
-    // textureのa値が0.5以下の時にPixelを棄却
-    if (textureColor.a <= 0.5f)
-    {
-        discard;
-    }
-    
-    // textureのa値が0の時にPixelを棄却
-    if (textureColor.a == 0.0f)
-    {
-        discard;
-    }
-    
-    // output.colorのa値が0の時にPixelを棄却
-    if (output.color.a == 0.0f)
-    {
-        discard;
-    }
-    
     // Samplingしたtextureの色とmaterialの色を乗算して合成っしてみる
     output.color = gMaterial.color * textureColor;
     
