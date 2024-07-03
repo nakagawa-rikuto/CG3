@@ -1384,7 +1384,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	/// *****************************************************
 	/// DescriptorRange
 	/// *****************************************************
-	//D3D12_DESCRIPTOR_RANGE descriptorRange = CreateDescriptorRange();
 	D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
 	descriptorRange[0].BaseShaderRegister = 0; // 0から始める
 	descriptorRange[0].NumDescriptors = 1; // 数は1つ
