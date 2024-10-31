@@ -125,3 +125,11 @@ struct Emitter {
 	float frequency;
 	float frequencyTime;
 };
+
+///-------------------------------------------/// 
+/// Field
+///-------------------------------------------///
+struct AccelerationField {
+	Vector3 acceleration;
+	AABB area;
+};

@@ -12,6 +12,12 @@
 #include <array>
 #include <assert.h>
 
+// AABB
+struct AABB {
+    Vector3 min; //!<最小点
+    Vector3 max; //!<最大点
+};
+
 // π
 float pi() { return static_cast<float>(M_PI); }
 
@@ -250,3 +256,14 @@ Matrix4x4 Inverse(const Matrix4x4& m) {
 
     return invMatrix;
 }
+
+#pragma region AABB
+
+bool IsCollision(const AABB& aabb, const Vector3& point) {
+    // 点がAABBの範囲内にあるかどうかを判定
+    return (point.x >= aabb.min.x && point.x <= aabb.max.x) &&
+        (point.y >= aabb.min.y && point.y <= aabb.max.y) &&
+        (point.z >= aabb.min.z && point.z <= aabb.max.z);
+}
+
+#pragma endregion

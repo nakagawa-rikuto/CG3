@@ -1084,6 +1084,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	const float kDeltaTime = 1.0f / 60.0f;
 	uint32_t numInstance = 0;
 
+	AccelerationField accelerationFild;
+	accelerationFild.acceleration = { 15.0f, 0.0f, 0.0f };
+	accelerationFild.area.min = { -1.0f, -1.0f, -1.0f };
+	accelerationFild.area.max = { 1.0f, 1.0f, 1.0f };
 
 #pragma endregion
 
@@ -1221,13 +1225,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					emitter.frequencyTime -= emitter.frequency; // 余計に過ぎたら時間も加味して頻度計算する
 				}
 
-				// 速度の設定
-				particleIterator->transform.translate += particleIterator->velocity * kDeltaTime;
-				particleIterator->currentTime += kDeltaTime;
+				// Fieldの範囲内のParticleには加速度を適用する
+				if (IsCollision(accelerationFild.area, (*particleIterator).transform.translate)) {
+					(*particleIterator).velocity += accelerationFild.acceleration + kDeltaTime;
+				}
 
-				float alpha = 1.0f - (particleIterator->currentTime / particleIterator->lifeTime);
-				particleIterator->color.w = alpha;
-				Matrix4x4 worldMatrixs = MakeAffineMatrix(particleIterator->transform.scale, particleIterator->transform.rotate, particleIterator->transform.translate);
+				// 速度の設定
+				(*particleIterator).transform.translate += (*particleIterator).velocity * kDeltaTime;
+				(*particleIterator).currentTime += kDeltaTime;
+
+				float alpha = 1.0f - ((*particleIterator).currentTime / (*particleIterator).lifeTime);
+				(*particleIterator).color.w = alpha;
+				Matrix4x4 worldMatrixs = MakeAffineMatrix((*particleIterator).transform.scale, (*particleIterator).transform.rotate, (*particleIterator).transform.translate);
 				Matrix4x4 wvpMatrixs = Mutiply(worldMatrixs, Mutiply(viewMatrix, projectionMatrix));
 
 				if (numInstance < kNumMaxInstance) {
@@ -1238,6 +1247,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				}
 				++particleIterator;
 			}
+
+			
 
 			/// *****************************************************
 			/// コマンドを積み込んで確定させる
