@@ -780,7 +780,10 @@ Matrix4x4 MakeUVMatrix(Transform transform) {
 	return UVTransformMatrix;
 }
 
-ParticleData MakeNewParticle(std::mt19937& randomEngine) {
+///-------------------------------------------/// 
+/// ランダムに発生させる関数
+///-------------------------------------------///
+ParticleData MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate) {
 	std::uniform_int_distribution<int> distribution(-1, 1);
 	std::uniform_int_distribution<int> distColor(0, 1);
 	std::uniform_int_distribution<int> distTime(1, 3);
@@ -788,10 +791,21 @@ ParticleData MakeNewParticle(std::mt19937& randomEngine) {
 	ParticleData particle;
 	particle.transform.scale = { 1.0f, 1.0f, 1.0f };
 	particle.transform.rotate = { 0.0f, 0.0f, 0.0f };
-	particle.transform.translate = {static_cast<float>(distribution(randomEngine)), static_cast<float>(distribution(randomEngine)), static_cast<float>(distribution(randomEngine))};
+	Vector3 randomTranslate = { static_cast<float>(distribution(randomEngine)), static_cast<float>(distribution(randomEngine)), static_cast<float>(distribution(randomEngine)) };
+	particle.transform.translate = randomTranslate + translate;
 	particle.velocity = { static_cast<float>(distribution(randomEngine)), static_cast<float>(distribution(randomEngine)), static_cast<float>(distribution(randomEngine)) };
 	particle.color = { static_cast<float>(distColor(randomEngine)), static_cast<float>(distColor(randomEngine)) , static_cast<float>(distColor(randomEngine)) , static_cast<float>(distColor(randomEngine)) };
 	particle.lifeTime = static_cast<float>(distTime(randomEngine));
 	particle.currentTime = 0;
+
 	return particle;
+}
+
+std::list<ParticleData> Emit(const Emitter& emitter, std::mt19937& randomEngine) {
+
+	std::list<ParticleData> particles;
+	for (uint32_t count = 0; count < emitter.count; ++count) {
+		particles.push_back(MakeNewParticle(randomEngine,emitter.transform.translate));
+	}
+	return particles;
 }

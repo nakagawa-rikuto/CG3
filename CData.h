@@ -115,3 +115,13 @@ struct ParticleForGPU {
 
 // インスタンス数
 const uint32_t kNumMaxInstance = 10; 
+
+///-------------------------------------------/// 
+/// エミッタ
+///-------------------------------------------///
+struct Emitter {
+	Transform transform;
+	uint32_t count;
+	float frequency;
+	float frequencyTime;
+};

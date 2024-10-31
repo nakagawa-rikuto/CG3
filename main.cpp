@@ -1062,16 +1062,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	/// *****************************************************
 
 	Transform transform = { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
-	Transform cameraTransform = { {1.0f,1.0f,1.0f}, {std::numbers::pi_v<float> / 3.0f, std::numbers::pi_v<float>, 0.0f }, {0.0f, 0.0f, -10.0f} };
+	Transform cameraTransform = { {1.0f,1.0f,1.0f}, {0.0f, 0.0f, 0.0f }, {0.0f, 0.0f, -1000.0f} };
 	Transform transformSprite = { {1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f, }, { 0.0f, 0.0f, 0.0f } };
 	Transform uvTransformSprite = { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 
 	
 
-	ParticleData particles[kNumMaxInstance];
-	for (uint32_t index = 0; index < kNumMaxInstance; ++index) {
-		particles[index] = MakeNewParticle(randomEngine);
-	}
+	std::list<ParticleData> particles;
+	/*particles.push_back(MakeNewParticle(randomEngine));
+	particles.push_back(MakeNewParticle(randomEngine));
+	particles.push_back(MakeNewParticle(randomEngine));*/
+
+	// エミッタ
+	Emitter emitter{};
+	emitter.count = 3;
+	emitter.frequency = 0.5f; // 時刻を進める
+	emitter.frequencyTime = 0.0f; // 発生頻度より大きいなら発生
+	emitter.transform = { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0} };
 
 	// 速度
 	const float kDeltaTime = 1.0f / 60.0f;
@@ -1149,7 +1156,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			ImGui::Begin("Camera");
 			ImGui::DragFloat3("Camera.rotate", &cameraTransform.rotate.x, 0.01f);
-			ImGui::DragFloat3("Camera.scale", &cameraTransform.scale.x, 0.01f);
+			ImGui::DragFloat3("Camera.scale", &cameraTransform.scale.x, 1.0f);
 			ImGui::DragFloat3("Camera.translate", &cameraTransform.translate.x, 0.01f);
 			ImGui::End();
 
@@ -1158,13 +1165,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::End();
 
 			ImGui::Begin("info");
-			ImGui::DragFloat3("transform", &particles[0].transform.translate.x, 0.1f);
-			ImGui::SliderAngle("SphereRotateX", &particles[0].transform.rotate.x);
-			ImGui::SliderAngle("SphereRotateY", &particles[0].transform.rotate.y);
-			ImGui::SliderAngle("SphereRotateZ", &particles[0].transform.rotate.z);
-			ImGui::ColorEdit4("Color", &instancingData[0].color.x);
-
-
+			if (ImGui::Button("ADD Particle")) {
+				particles.splice(particles.end(), Emit(emitter, randomEngine));
+				
+			}
+			//ImGui::SliderInt("Size", &particles.size());
+			ImGui::DragFloat3("translate", &emitter.transform.translate.x, 0.01f, -100.0f, 100.0f);
+;			ImGui::ColorEdit4("Color", &instancingData[0].color.x);
 			ImGui::End();
 
 #endif // DEBUG
@@ -1200,24 +1207,36 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			transformtionMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
 			transformtionMatrixDataSprite->World = MakeIdenitiy4x4();
 
-			for (uint32_t index = 0; index < kNumMaxInstance; ++index) {
+			for (std::list<ParticleData>::iterator particleIterator = particles.begin(); particleIterator != particles.end();) {
 
-				if (particles[index].lifeTime <= particles[index].currentTime) {
+				if ((*particleIterator).lifeTime <= (*particleIterator).currentTime) {
+					particleIterator = particles.erase(particleIterator);
 					continue;
 				}
 
-				// 速度の設定
-				particles[index].transform.translate += particles[index].velocity * kDeltaTime;
-				particles[index].currentTime += kDeltaTime;
+				// 時刻を進める
+				emitter.frequencyTime += kDeltaTime; // 時刻を進める
+				if (emitter.frequency <= emitter.frequencyTime) {
+					particles.splice(particles.end(), Emit(emitter, randomEngine)); // 派生処理
+					emitter.frequencyTime -= emitter.frequency; // 余計に過ぎたら時間も加味して頻度計算する
+				}
 
-				float alpha = 1.0f - (particles[index].currentTime / particles[index].lifeTime);
-				particles[index].color.w = alpha;
-				Matrix4x4 worldMatrixs = MakeAffineMatrix(particles[index].transform.scale, particles[index].transform.rotate, particles[index].transform.translate);
+				// 速度の設定
+				particleIterator->transform.translate += particleIterator->velocity * kDeltaTime;
+				particleIterator->currentTime += kDeltaTime;
+
+				float alpha = 1.0f - (particleIterator->currentTime / particleIterator->lifeTime);
+				particleIterator->color.w = alpha;
+				Matrix4x4 worldMatrixs = MakeAffineMatrix(particleIterator->transform.scale, particleIterator->transform.rotate, particleIterator->transform.translate);
 				Matrix4x4 wvpMatrixs = Mutiply(worldMatrixs, Mutiply(viewMatrix, projectionMatrix));
-				instancingData[index].WVP = wvpMatrixs;
-				instancingData[index].World = worldMatrixs;
-				instancingData[index].color = particles[index].color;
-				++numInstance;
+
+				if (numInstance < kNumMaxInstance) {
+					instancingData->WVP = wvpMatrixs;
+					instancingData->World = worldMatrixs;
+					instancingData->color = particleIterator->color;
+					++numInstance;
+				}
+				++particleIterator;
 			}
 
 			/// *****************************************************
