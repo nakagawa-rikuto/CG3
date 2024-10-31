@@ -13,6 +13,7 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <random>
 
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
@@ -265,7 +266,7 @@ D3D12_RASTERIZER_DESC CreateRasterizerState() {
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
 
 	// 裏面(時計回り)を表示しない
-	rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+	rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
 
 	// 三角形の中を塗りつぶす
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
@@ -355,7 +356,7 @@ D3D12_DEPTH_STENCIL_DESC CreateDepthStencilDesc() {
 	depthStencilDesc.DepthEnable = true;
 
 	// 書き込みします
-	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
 
 	// 比較関数はLessEqual。
 	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
@@ -777,4 +778,20 @@ Matrix4x4 MakeUVMatrix(Transform transform) {
 	UVTransformMatrix = Mutiply(UVTransformMatrix, MakeTranslateMatrix(transform.translate));
 
 	return UVTransformMatrix;
+}
+
+ParticleData MakeNewParticle(std::mt19937& randomEngine) {
+	std::uniform_int_distribution<int> distribution(-1, 1);
+	std::uniform_int_distribution<int> distColor(0, 1);
+	std::uniform_int_distribution<int> distTime(1, 3);
+
+	ParticleData particle;
+	particle.transform.scale = { 1.0f, 1.0f, 1.0f };
+	particle.transform.rotate = { 0.0f, 0.0f, 0.0f };
+	particle.transform.translate = {static_cast<float>(distribution(randomEngine)), static_cast<float>(distribution(randomEngine)), static_cast<float>(distribution(randomEngine))};
+	particle.velocity = { static_cast<float>(distribution(randomEngine)), static_cast<float>(distribution(randomEngine)), static_cast<float>(distribution(randomEngine)) };
+	particle.color = { static_cast<float>(distColor(randomEngine)), static_cast<float>(distColor(randomEngine)) , static_cast<float>(distColor(randomEngine)) , static_cast<float>(distColor(randomEngine)) };
+	particle.lifeTime = static_cast<float>(distTime(randomEngine));
+	particle.currentTime = 0;
+	return particle;
 }

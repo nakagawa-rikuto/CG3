@@ -95,3 +95,23 @@ enum ShaderType {
 	Object3d, // Objec3D
 	Particle, // Particle
 };
+
+///=====================================================/// 
+/// Particleの構造体
+///=====================================================///
+struct ParticleData {
+	Transform transform;
+	Vector3 velocity;
+	Vector4 color;
+	float lifeTime;
+	float currentTime;
+};
+
+struct ParticleForGPU {
+	Matrix4x4 WVP;
+	Matrix4x4 World;
+	Vector4 color;
+};
+
+// インスタンス数
+const uint32_t kNumMaxInstance = 10; 

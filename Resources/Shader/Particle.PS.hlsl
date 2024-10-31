@@ -30,7 +30,7 @@ PixlShaderOutput main(VertexShaderOutput input)
     float4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
     
     // Colorの計算
-    output.color = gMaterial.color * textureColor;
+    output.color = gMaterial.color * textureColor * input.color;
     
     if (output.color.a == 0.0)
     {
