@@ -30,6 +30,13 @@ struct Material {
 	Matrix4x4 uvTransform;
 };
 
+///-------------------------------------------/// 
+/// マテリアルデータ
+///-------------------------------------------///
+struct MaterialData {
+	std::string textureFilePath;
+};
+
 /// *****************************************************
 ///　TransformationMatrixを拡張
 /// *****************************************************
@@ -52,4 +59,39 @@ struct DirectionalLight {
 /// *****************************************************
 struct ModelData {
 	std::vector<VertexData> vertices;
+	MaterialData material;
+};
+
+/// *****************************************************
+///　BlendMode
+/// *****************************************************
+enum BlendMode {
+	//!< ブレンドなし
+	kBlendModeNone,
+
+	//!< 通常ブレンド。
+	KBlendModeNormal,
+
+	//!< 加算
+	kBlendModeAdd,
+
+	//!< 減算
+	kBlendModeSubtract,
+
+	//!< 乗算
+	kBlendModeMultily,
+
+	//!< スクリーン
+	kBlendModeScreen,
+
+	// 利用しない
+	kCountOfBlendMode,
+};
+
+///-------------------------------------------/// 
+/// ShaderType
+///-------------------------------------------///
+enum ShaderType {
+	Object3d, // Objec3D
+	Particle, // Particle
 };

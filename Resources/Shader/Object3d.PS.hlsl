@@ -1,14 +1,5 @@
 #include "Object3d.hlsli"
 
-//float4 main() : SV_TARGET
-//{
-//	return float4(1.0f, 1.0f, 1.0f, 1.0f);
-//}
-
-/// ******************************
-/// 初めてのPixelShader
-/// ******************************
-
 struct Material {
     float4 color;
     int enableLighting;

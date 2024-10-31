@@ -276,23 +276,38 @@ D3D12_RASTERIZER_DESC CreateRasterizerState() {
 /// *****************************************************
 /// ShaderをCompileする(Vertex)
 /// *****************************************************
-Microsoft::WRL::ComPtr<IDxcBlob> CompileShaderVertex(IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler) {
+Microsoft::WRL::ComPtr<IDxcBlob> CompileShaderVertex(IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler, ShaderType Type) {
 	// Shaderをコンパイルする
-	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"Object3d.VS.hlsl", L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
-	assert(vertexShaderBlob != nullptr);
 
-	return vertexShaderBlob;
+	if (Type == ShaderType::Particle) {
+		Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"./Resources/Shader/Particle.VS.hlsl", L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
+		assert(vertexShaderBlob != nullptr);
+		return vertexShaderBlob;
+
+	} else {
+
+		Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"./Resources/Shader/Object3d.VS.hlsl", L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
+		assert(vertexShaderBlob != nullptr);
+		return vertexShaderBlob;
+	}
 }
 
 /// *****************************************************
 /// ShaderをCompileする(Pixel)
 /// *****************************************************
-Microsoft::WRL::ComPtr<IDxcBlob> CompileShaderPixel(IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler) {
+Microsoft::WRL::ComPtr<IDxcBlob> CompileShaderPixel(IDxcUtils* dxcUtils, IDxcCompiler3* dxcCompiler, IDxcIncludeHandler* includeHandler, ShaderType Type) {
 	// Shaderをコンパイルする
-	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"Object3D.PS.hlsl", L"ps_6_0", dxcUtils, dxcCompiler, includeHandler);
-	assert(pixelShaderBlob != nullptr);
+	if (Type == ShaderType::Particle) {
+		Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"./Resources/Shader/Particle.PS.hlsl", L"ps_6_0", dxcUtils, dxcCompiler, includeHandler);
+		assert(pixelShaderBlob != nullptr);
+		return pixelShaderBlob;
 
-	return pixelShaderBlob;
+	} else {
+		Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"./Resources/Shader/Object3D.PS.hlsl", L"ps_6_0", dxcUtils, dxcCompiler, includeHandler);
+		assert(pixelShaderBlob != nullptr);
+		return pixelShaderBlob;
+	} 
+	
 }
 
 /// *****************************************************
@@ -543,6 +558,36 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descrip
 	return handleGPU;
 }
 
+///-------------------------------------------/// 
+///MaterialData構造体と読み込み関数
+///-------------------------------------------///
+MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
+	/// ===必要な変数と宣言ファイルを開く=== ///
+	MaterialData materialData; // 構築するMaterialData
+	std::string line; // ファイルから読んだ1行を格納するもの
+	std::ifstream file(directoryPath + "/" + filename); // ファイルを開く
+	assert(file.is_open()); // とりあえず開けなかったら止める
+
+	/// ===ファイルを読み、MateiralDataを構築=== ///
+	while (std::getline(file, line)) {
+		std::string identifier;
+		std::istringstream s(line);
+		s >> identifier;
+
+		// identifierに応じた処理
+		if (identifier == "map_kd") {
+			std::string textureFilename;
+			s >> textureFilename;
+
+			// 連結してファイルパスにする
+			materialData.textureFilePath = directoryPath + "/" + textureFilename;
+		}
+	}
+
+	// MaterialDataを返す
+	return materialData;
+}
+
 /// *****************************************************
 ///　Objectファイルを読む関数
 /// *****************************************************
@@ -607,12 +652,12 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 				Vector4 position = positions[elementIndices[0] - 1];
 				Vector2 texcoord = texcoords[elementIndices[1] - 1];
 				Vector3 normal = normals[elementIndices[2] - 1];
-				//position.x *= -1.0f; // 位置の反転
-				position.y *= -1.0f;
-				//normal.x *= -1.0f; // 法線の反転
-				normal.y *= -1.0f;
+
+				// 位置と法線のz座標を反転する
+				position.z *= -1.0f;
+				normal.z *= -1.0f;
 				VertexData vertex = { position, texcoord, normal };
-				modelData.vertices.push_back(vertex);
+				texcoord.y = 1.0f - texcoord.y;
 				triangle[faceVertex] = { position, texcoord, normal };
 			}
 
@@ -620,6 +665,12 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 			modelData.vertices.push_back(triangle[2]);
 			modelData.vertices.push_back(triangle[1]);
 			modelData.vertices.push_back(triangle[0]);
+		} else if (identifier == "mtllib") {
+			// materialTemplateLibraryファイルの名前を取得
+			std::string materialFilename;
+			s >> materialFilename;
+			// 基本的にObjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を渡す
+			modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
 		}
 	}
 
