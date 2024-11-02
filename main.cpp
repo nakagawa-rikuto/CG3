@@ -829,21 +829,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// *******************************************************************
 		Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShaderPixel(dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get(), type);
 
-		/// *********************************************************************
-		/// PSO
-		/// Pipeline State ObjectCreateVertexResource
-		/// *********************************************************************
-		// PSOの生成
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
-		graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();  // RootSignature
-		graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;  // InputLayout
-		graphicsPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(),
-			vertexShaderBlob->GetBufferSize() }; // VertexShader
-		graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),
-			pixelShaderBlob->GetBufferSize() }; // PixelShader
-		graphicsPipelineStateDesc.BlendState = CreateBlendState(); // BlendState
-		graphicsPipelineStateDesc.RasterizerState = CreateRasterizerState(); // RasterizerState
-		graphicsPipelineStateDesc.DepthStencilState = CreateDepthStencilDesc();
+	/// *********************************************************************
+	/// PSO
+	/// Pipeline State ObjectCreateVertexResource
+	/// *********************************************************************
+	// PSOの生成
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
+	graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();  // RootSignature
+	graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;  // InputLayout
+	graphicsPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(),
+		vertexShaderBlob->GetBufferSize() }; // VertexShader
+	graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),
+		pixelShaderBlob->GetBufferSize() }; // PixelShader
+	graphicsPipelineStateDesc.BlendState = CreateBlendState(BlendMode::KBlendModeNormal); // BlendState
+	graphicsPipelineStateDesc.RasterizerState = CreateRasterizerState(); // RasterizerState
+	graphicsPipelineStateDesc.DepthStencilState = CreateDepthStencilDesc();
 
 		// 書き込むRTVの情報
 		graphicsPipelineStateDesc.NumRenderTargets = 1;
@@ -973,7 +973,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			vertexShaderBlob->GetBufferSize() }; // VertexShader
 		graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),
 			pixelShaderBlob->GetBufferSize() }; // PixelShader
-		graphicsPipelineStateDesc.BlendState = CreateBlendState(); // BlendState
+		graphicsPipelineStateDesc.BlendState = CreateBlendState(BlendMode::KBlendModeNormal); // BlendState
 		graphicsPipelineStateDesc.RasterizerState = CreateRasterizerState(); // RasterizerState
 		graphicsPipelineStateDesc.DepthStencilState = CreateDepthStencilDesc();
 
@@ -1061,7 +1061,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	/// *****************************************************
 
 	Transform transform = { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
-	Transform cameraTransform = { {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f, 0.0f, -10.0f} };
+	Transform cameraTransform = { {1.0f,1.0f,1.0f}, {0.2f,0.0f,0.0f}, {0.0f, 2.0f, -10.0f} };
 	Transform transformSprite = { {1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f, }, { 0.0f, 0.0f, 0.0f } };
 	Transform uvTransformSprite = { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 
