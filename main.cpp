@@ -830,21 +830,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// *******************************************************************
 		Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShaderPixel(dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get(), type);
 
-		/// *********************************************************************
-		/// PSO
-		/// Pipeline State ObjectCreateVertexResource
-		/// *********************************************************************
-		// PSOの生成
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
-		graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();  // RootSignature
-		graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;  // InputLayout
-		graphicsPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(),
-			vertexShaderBlob->GetBufferSize() }; // VertexShader
-		graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),
-			pixelShaderBlob->GetBufferSize() }; // PixelShader
-		graphicsPipelineStateDesc.BlendState = CreateBlendState(); // BlendState
-		graphicsPipelineStateDesc.RasterizerState = CreateRasterizerState(); // RasterizerState
-		graphicsPipelineStateDesc.DepthStencilState = CreateDepthStencilDesc();
+	/// *********************************************************************
+	/// PSO
+	/// Pipeline State ObjectCreateVertexResource
+	/// *********************************************************************
+	// PSOの生成
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
+	graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();  // RootSignature
+	graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;  // InputLayout
+	graphicsPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(),
+		vertexShaderBlob->GetBufferSize() }; // VertexShader
+	graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),
+		pixelShaderBlob->GetBufferSize() }; // PixelShader
+	graphicsPipelineStateDesc.BlendState = CreateBlendState(BlendMode::KBlendModeNormal); // BlendState
+	graphicsPipelineStateDesc.RasterizerState = CreateRasterizerState(); // RasterizerState
+	graphicsPipelineStateDesc.DepthStencilState = CreateDepthStencilDesc();
 
 		// 書き込むRTVの情報
 		graphicsPipelineStateDesc.NumRenderTargets = 1;
@@ -974,7 +974,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			vertexShaderBlob->GetBufferSize() }; // VertexShader
 		graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),
 			pixelShaderBlob->GetBufferSize() }; // PixelShader
-		graphicsPipelineStateDesc.BlendState = CreateBlendState(); // BlendState
+		graphicsPipelineStateDesc.BlendState = CreateBlendState(BlendMode::kBlendModeAdd); // BlendState
 		graphicsPipelineStateDesc.RasterizerState = CreateRasterizerState(); // RasterizerState
 		graphicsPipelineStateDesc.DepthStencilState = CreateDepthStencilDesc();
 
@@ -1062,22 +1062,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	/// *****************************************************
 
 	Transform transform = { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
-	Transform cameraTransform = { {1.0f,1.0f,1.0f}, {0.0f, 0.0f, 0.0f }, {0.0f, 0.0f, -1000.0f} };
+	Transform cameraTransform = { 
+		{1.0f,1.0f,1.0f}, 
+		{std::numbers::pi_v<float> / 3.0f, std::numbers::pi_v<float>, 0.0f }, 
+		{0.0f, 23.0f, 10.0f} };
 	Transform transformSprite = { {1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f, }, { 0.0f, 0.0f, 0.0f } };
 	Transform uvTransformSprite = { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 
 	
-
+	// Particleをlistで管理する
 	std::list<ParticleData> particles;
-	/*particles.push_back(MakeNewParticle(randomEngine));
-	particles.push_back(MakeNewParticle(randomEngine));
-	particles.push_back(MakeNewParticle(randomEngine));*/
 
 	// エミッタ
 	Emitter emitter{};
 	emitter.count = 3;
-	emitter.frequency = 0.5f; // 時刻を進める
-	emitter.frequencyTime = 0.0f; // 発生頻度より大きいなら発生
+	emitter.frequency = 0.5f; // 0.5秒毎に発生
+	emitter.frequencyTime = 0.0f; // 発生頻度ようの時刻。0で初期化
 	emitter.transform = { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0} };
 
 	// 速度
@@ -1159,8 +1159,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #ifdef _DEBUG
 
 			ImGui::Begin("Camera");
+			ImGui::DragFloat3("Camera.scale", &cameraTransform.scale.x, 0.01f);
 			ImGui::DragFloat3("Camera.rotate", &cameraTransform.rotate.x, 0.01f);
-			ImGui::DragFloat3("Camera.scale", &cameraTransform.scale.x, 1.0f);
 			ImGui::DragFloat3("Camera.translate", &cameraTransform.translate.x, 0.01f);
 			ImGui::End();
 
@@ -1183,6 +1183,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 			Matrix4x4 backToFrontMatrix = MakeRotateYMatrix(std::numbers::pi_v<float>);
 
+			// カメラ
 			Matrix4x4 billboardMatrix = Mutiply(backToFrontMatrix, cameraMatrix);
 			billboardMatrix.m[3][0] = 0.0f;
 			billboardMatrix.m[3][1] = 0.0f;
@@ -1192,8 +1193,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			/// WorldViewProjectionMatrixを作る
 			/// *****************************************************
 			// WorldMatrixを作る
-			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-			//Matrix4x4 worldMatrix = Mutiply(MakeScalseMatrix(transform.scale), Mutiply(MakeTranslateMatrix(transform.translate), billboardMatrix));
+			Matrix4x4 worldMatrix = Mutiply(MakeScalseMatrix(transform.scale), Mutiply(MakeTranslateMatrix(transform.translate), billboardMatrix));
 			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
 			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 			Matrix4x4 viewMatrixSprite = MakeIdenitiy4x4();
@@ -1211,17 +1211,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			transformtionMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
 			transformtionMatrixDataSprite->World = MakeIdenitiy4x4();
 
+			// Particleの処理
 			for (std::list<ParticleData>::iterator particleIterator = particles.begin(); particleIterator != particles.end();) {
 
 				if ((*particleIterator).lifeTime <= (*particleIterator).currentTime) {
-					particleIterator = particles.erase(particleIterator);
+					particleIterator = particles.erase(particleIterator); // 生存帰還が過ぎたParticleはListから消す。戻り値が次のイテレータとなる
 					continue;
 				}
 
-				// 時刻を進める
+				// 頻度によって発生させる
 				emitter.frequencyTime += kDeltaTime; // 時刻を進める
-				if (emitter.frequency <= emitter.frequencyTime) {
-					particles.splice(particles.end(), Emit(emitter, randomEngine)); // 派生処理
+				if (emitter.frequency <= emitter.frequencyTime) { // 頻度より大きいなら発生
+					particles.splice(particles.end(), Emit(emitter, randomEngine)); // 発生処理
 					emitter.frequencyTime -= emitter.frequency; // 余計に過ぎたら時間も加味して頻度計算する
 				}
 
@@ -1240,12 +1241,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				Matrix4x4 wvpMatrixs = Mutiply(worldMatrixs, Mutiply(viewMatrix, projectionMatrix));
 
 				if (numInstance < kNumMaxInstance) {
-					instancingData->WVP = wvpMatrixs;
-					instancingData->World = worldMatrixs;
-					instancingData->color = particleIterator->color;
+					instancingData[numInstance].WVP = wvpMatrixs;
+					instancingData[numInstance].World = worldMatrixs;
+					instancingData[numInstance].color = particleIterator->color;
 					++numInstance;
 				}
-				++particleIterator;
+				++particleIterator; // 次のイテレータに進める
 			}
 
 			
