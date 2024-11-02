@@ -973,7 +973,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			vertexShaderBlob->GetBufferSize() }; // VertexShader
 		graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),
 			pixelShaderBlob->GetBufferSize() }; // PixelShader
-		graphicsPipelineStateDesc.BlendState = CreateBlendState(BlendMode::KBlendModeNormal); // BlendState
+		graphicsPipelineStateDesc.BlendState = CreateBlendState(BlendMode::kBlendModeAdd); // BlendState
 		graphicsPipelineStateDesc.RasterizerState = CreateRasterizerState(); // RasterizerState
 		graphicsPipelineStateDesc.DepthStencilState = CreateDepthStencilDesc();
 
