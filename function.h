@@ -850,7 +850,7 @@ Matrix4x4 MakeUVMatrix(Transform transform) {
 ParticleData MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate) {
 	std::uniform_int_distribution<int> distribution(-1, 1);
 	std::uniform_int_distribution<int> distColor(0, 1);
-	std::uniform_int_distribution<int> distTime(5, 8);
+	std::uniform_int_distribution<int> distTime(1, 3);
 
 	ParticleData particle;
 	particle.transform.scale = { 1.0f, 1.0f, 1.0f };
