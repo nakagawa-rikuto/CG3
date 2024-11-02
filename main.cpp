@@ -830,21 +830,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// *******************************************************************
 		Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShaderPixel(dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get(), type);
 
-		/// *********************************************************************
-		/// PSO
-		/// Pipeline State ObjectCreateVertexResource
-		/// *********************************************************************
-		// PSOの生成
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
-		graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();  // RootSignature
-		graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;  // InputLayout
-		graphicsPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(),
-			vertexShaderBlob->GetBufferSize() }; // VertexShader
-		graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),
-			pixelShaderBlob->GetBufferSize() }; // PixelShader
-		graphicsPipelineStateDesc.BlendState = CreateBlendState(); // BlendState
-		graphicsPipelineStateDesc.RasterizerState = CreateRasterizerState(); // RasterizerState
-		graphicsPipelineStateDesc.DepthStencilState = CreateDepthStencilDesc();
+	/// *********************************************************************
+	/// PSO
+	/// Pipeline State ObjectCreateVertexResource
+	/// *********************************************************************
+	// PSOの生成
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
+	graphicsPipelineStateDesc.pRootSignature = rootSignature.Get();  // RootSignature
+	graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;  // InputLayout
+	graphicsPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(),
+		vertexShaderBlob->GetBufferSize() }; // VertexShader
+	graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),
+		pixelShaderBlob->GetBufferSize() }; // PixelShader
+	graphicsPipelineStateDesc.BlendState = CreateBlendState(BlendMode::KBlendModeNormal); // BlendState
+	graphicsPipelineStateDesc.RasterizerState = CreateRasterizerState(); // RasterizerState
+	graphicsPipelineStateDesc.DepthStencilState = CreateDepthStencilDesc();
 
 		// 書き込むRTVの情報
 		graphicsPipelineStateDesc.NumRenderTargets = 1;
@@ -974,7 +974,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			vertexShaderBlob->GetBufferSize() }; // VertexShader
 		graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),
 			pixelShaderBlob->GetBufferSize() }; // PixelShader
-		graphicsPipelineStateDesc.BlendState = CreateBlendState(); // BlendState
+		graphicsPipelineStateDesc.BlendState = CreateBlendState(BlendMode::kBlendModeAdd); // BlendState
 		graphicsPipelineStateDesc.RasterizerState = CreateRasterizerState(); // RasterizerState
 		graphicsPipelineStateDesc.DepthStencilState = CreateDepthStencilDesc();
 
@@ -1062,7 +1062,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	/// *****************************************************
 
 	Transform transform = { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
-	Transform cameraTransform = { {1.0f,1.0f,1.0f}, {std::numbers::pi_v<float> / 3.0f, std::numbers::pi_v<float>, 0.0f }, {0.0f, 0.0f, -10.0f} };
+	Transform cameraTransform = { 
+		{1.0f,1.0f,1.0f}, 
+		{std::numbers::pi_v<float> / 3.0f, std::numbers::pi_v<float>, 0.0f }, 
+		{0.0f, 23.0f, 10.0f} };
 	Transform transformSprite = { {1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f, }, { 0.0f, 0.0f, 0.0f } };
 	Transform uvTransformSprite = { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 
@@ -1148,8 +1151,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 #ifdef _DEBUG
 
 			ImGui::Begin("Camera");
-			ImGui::DragFloat3("Camera.rotate", &cameraTransform.rotate.x, 0.01f);
 			ImGui::DragFloat3("Camera.scale", &cameraTransform.scale.x, 0.01f);
+			ImGui::DragFloat3("Camera.rotate", &cameraTransform.rotate.x, 0.01f);
 			ImGui::DragFloat3("Camera.translate", &cameraTransform.translate.x, 0.01f);
 			ImGui::End();
 
@@ -1181,8 +1184,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			/// WorldViewProjectionMatrixを作る
 			/// *****************************************************
 			// WorldMatrixを作る
-			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-			//Matrix4x4 worldMatrix = Mutiply(MakeScalseMatrix(transform.scale), Mutiply(MakeTranslateMatrix(transform.translate), billboardMatrix));
+			//Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+			Matrix4x4 worldMatrix = Mutiply(MakeScalseMatrix(transform.scale), Mutiply(MakeTranslateMatrix(transform.translate), billboardMatrix));
 			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
 			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 			Matrix4x4 viewMatrixSprite = MakeIdenitiy4x4();
