@@ -114,7 +114,7 @@ struct ParticleForGPU {
 };
 
 // インスタンス数
-const uint32_t kNumMaxInstance = 10; 
+const uint32_t kNumMaxInstance = 100; 
 
 ///-------------------------------------------/// 
 /// エミッタ

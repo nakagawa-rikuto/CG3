@@ -248,15 +248,79 @@ Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(
 /// *****************************************************
 /// BlendState(ブレンドステート)
 /// *****************************************************
-D3D12_BLEND_DESC CreateBlendState() {
+D3D12_BLEND_DESC CreateBlendState(BlendMode mode) {
 	// BlendStateの設定
 	D3D12_BLEND_DESC blendDesc{};
 
 	// すべての色要素を書き込む
 	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
+	if (mode == BlendMode::kBlendModeAdd) {
+		blendDesc.RenderTarget[0].BlendEnable = TRUE;
+
+		// 加算合成
+		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+
+		// a値の設定
+		blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+		blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	} else if (mode == BlendMode::kBlendModeSubtract) {
+		blendDesc.RenderTarget[0].BlendEnable = TRUE;
+
+		// 減算合成
+		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_REV_SUBTRACT;
+		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+
+		// a値の設定
+		blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+		blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	} else if (mode == BlendMode::kBlendModeMultily) {
+		blendDesc.RenderTarget[0].BlendEnable = TRUE;
+
+		// 乗算合成
+		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_ZERO;
+		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_SRC_COLOR;
+
+		// a値の設定
+		blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+		blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	} else if (mode == BlendMode::kBlendModeScreen) {
+		blendDesc.RenderTarget[0].BlendEnable = TRUE;
+
+		// スクリーン合成
+		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_INV_DEST_COLOR;
+		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+
+		// a値の設定
+		blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+		blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	} else if(mode == BlendMode::KBlendModeNormal) {
+		blendDesc.RenderTarget[0].BlendEnable = TRUE;
+
+		// Normal
+		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+
+		// a値の設定
+		blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+		blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	}
+
 	return blendDesc;
 }
+
+
 
 /// *****************************************************
 /// RasterizerState(ラスタライザステート)
@@ -786,7 +850,7 @@ Matrix4x4 MakeUVMatrix(Transform transform) {
 ParticleData MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate) {
 	std::uniform_int_distribution<int> distribution(-1, 1);
 	std::uniform_int_distribution<int> distColor(0, 1);
-	std::uniform_int_distribution<int> distTime(1, 3);
+	std::uniform_int_distribution<int> distTime(5, 8);
 
 	ParticleData particle;
 	particle.transform.scale = { 1.0f, 1.0f, 1.0f };
@@ -796,7 +860,7 @@ ParticleData MakeNewParticle(std::mt19937& randomEngine, const Vector3& translat
 	particle.velocity = { static_cast<float>(distribution(randomEngine)), static_cast<float>(distribution(randomEngine)), static_cast<float>(distribution(randomEngine)) };
 	particle.color = { static_cast<float>(distColor(randomEngine)), static_cast<float>(distColor(randomEngine)) , static_cast<float>(distColor(randomEngine)) , static_cast<float>(distColor(randomEngine)) };
 	particle.lifeTime = static_cast<float>(distTime(randomEngine));
-	particle.currentTime = 0;
+	particle.currentTime = 0.0f;
 
 	return particle;
 }
