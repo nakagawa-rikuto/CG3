@@ -781,7 +781,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		vertexShaderBlob->GetBufferSize() }; // VertexShader
 	graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),
 		pixelShaderBlob->GetBufferSize() }; // PixelShader
-	graphicsPipelineStateDesc.BlendState = CreateBlendState(); // BlendState
+	graphicsPipelineStateDesc.BlendState = CreateBlendState(BlendMode::kBlendModeMultily); // BlendState
 	graphicsPipelineStateDesc.RasterizerState = CreateRasterizerState(); // RasterizerState
 	graphicsPipelineStateDesc.DepthStencilState = CreateDepthStencilDesc();
 
@@ -870,7 +870,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	/// *****************************************************
 	
 	Transform transform = { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
-	Transform cameraTransform = { {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f, 0.0f, -10.0f} };
+	Transform cameraTransform = { {1.0f,1.0f,1.0f}, {0.2f,0.0f,0.0f}, {0.0f, 2.0f, -10.0f} };
 	Transform transformSprite = { {1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f, }, { 0.0f, 0.0f, 0.0f } };
 	Transform uvTransformSprite = { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 

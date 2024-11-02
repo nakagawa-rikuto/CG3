@@ -53,3 +53,29 @@ struct DirectionalLight {
 struct ModelData {
 	std::vector<VertexData> vertices;
 };
+
+/// *****************************************************
+///　BlendMode
+/// *****************************************************
+enum BlendMode {
+	//!< ブレンドなし
+	kBlendModeNone,
+
+	//!< 通常ブレンド。
+	KBlendModeNormal,
+
+	//!< 加算
+	kBlendModeAdd,
+
+	//!< 減算
+	kBlendModeSubtract,
+
+	//!< 乗算
+	kBlendModeMultily,
+
+	//!< スクリーン
+	kBlendModeScreen,
+
+	// 利用しない
+	kCountOfBlendMode,
+};
