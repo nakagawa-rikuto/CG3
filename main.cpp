@@ -112,7 +112,7 @@ enum BlendMode {
 
 	//!< 減算
 	kBlendModeSubtract,
-	
+
 	//!< 乗算
 	kBlendModeMultily,
 
@@ -343,7 +343,7 @@ Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(
 /// *****************************************************
 /// BlendState(ブレンドステート)
 /// *****************************************************
-D3D12_BLEND_DESC CreateBlendState() {
+D3D12_BLEND_DESC CreateBlendState(BlendMode mode) {
 	// BlendStateの設定
 	D3D12_BLEND_DESC blendDesc{};
 
@@ -351,33 +351,42 @@ D3D12_BLEND_DESC CreateBlendState() {
 	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 	blendDesc.RenderTarget[0].BlendEnable = TRUE;
 
-	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	if (mode == BlendMode::kBlendModeAdd) {
 
-	// 加算合成
-	/*blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;*/
+		// 加算合成
+		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+	} else if (mode == BlendMode::kBlendModeSubtract) {
 
-	// 減算合成
-	/*blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_REV_SUBTRACT;
-	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE*/;
+		// 減算合成
+		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_REV_SUBTRACT;
+		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+	} else if (mode == BlendMode::kBlendModeMultily) {
 
-	// 乗算合成
-	/*blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_ZERO;
-	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_SRC_COLOR;*/
+		// 乗算合成
+		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_ZERO;
+		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_SRC_COLOR;
+	} else if (mode == BlendMode::kBlendModeScreen) {
 
-	// スクリーン合成
-	/*blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_INV_DEST_COLOR;
-	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;*/
+		// スクリーン合成
+		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_INV_DEST_COLOR;
+		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+	} else {
 
-	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+
+		blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+
+		// a値の設定
+		blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+		blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	}
 
 	return blendDesc;
 }
@@ -649,7 +658,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTetureResource(ID3D12De
 /// *****************************************************
 /// GetCPUDescriptorHandleの作成
 /// *****************************************************
-D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index){
+D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index) {
 
 	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	handleCPU.ptr += (descriptorSize * index);
@@ -817,7 +826,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ShowWindow(hwnd, SW_SHOW);
 
 #pragma endregion
-	
+
 #ifdef _DEBUG
 
 	/// *****************************************************
@@ -896,7 +905,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Log("Complete create D3D12Device!!!\n");
 
 #pragma endregion
-	
+
 #pragma region ///// エラー・警告 /////
 #ifdef _DEBUG
 
@@ -1138,7 +1147,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	/// Material(スフィア)用のResourceを作る
 	/// *****************************************************
 	// マテリアル(スフィア)用のリソースを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceSphere = 
+	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceSphere =
 		CreateVertexResource(hr, device.Get(), sizeof(Material));
 
 	// マテリアルにデータを書き込む
@@ -1178,7 +1187,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	/// TransformationMatrix(スフィア)用のResourceを作る
 	/// *****************************************************
 	// WVP(スフィア)用のリソースを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResourceSphere = 
+	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResourceSphere =
 		CreateVertexResource(hr, device.Get(), sizeof(TransformationMatrix));
 
 	// データを書き込む
@@ -1212,7 +1221,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	/// Transform周りを作る
 	/// *****************************************************
 	// Sprite用のTransformMatrix用のリソースを作る。
-	Microsoft::WRL::ComPtr<ID3D12Resource> transformMatrixResourceSprite = 
+	Microsoft::WRL::ComPtr<ID3D12Resource> transformMatrixResourceSprite =
 		CreateVertexResource(hr, device.Get(), sizeof(TransformationMatrix));
 
 	//データを書き込む
@@ -1229,15 +1238,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	///  DescriptorHeapの生成
 	/// *****************************************************
 	// RTV用のディスクリプタヒープの生成
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap = 
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap =
 		CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
 
 	// SRV用のディスクリプタヒープの生成
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap = 
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap =
 		CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
 
 	// DSV用のヒープでディスクリプタの数は1。
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap = 
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap =
 		CreateDescriptorHeap(device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
 
 	/// *****************************************************
@@ -1247,7 +1256,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	const uint32_t descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	const uint32_t descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	const uint32_t descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-	
+
 
 	/// *****************************************************
 	///  RTVの作成
@@ -1293,7 +1302,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	srvDesc.Format = metadata.format;
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D; // 2Dテクスチャ
-	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels); 
+	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
 
 	// metadata2を基に2個目のSRVの設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2{};
@@ -1412,7 +1421,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	descriptionRootSignature.pParameters = rootParameters; // ルートパラメータ配列へのポインタ
 	descriptionRootSignature.NumParameters = _countof(rootParameters); // 配列の高さ
-	
+
 	/// *****************************************************
 	/// Samplerの設定
 	/// *****************************************************
@@ -1485,7 +1494,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		vertexShaderBlob->GetBufferSize() }; // VertexShader
 	graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),
 		pixelShaderBlob->GetBufferSize() }; // PixelShader
-	graphicsPipelineStateDesc.BlendState = CreateBlendState(); // BlendState
+	graphicsPipelineStateDesc.BlendState = CreateBlendState(BlendMode::KBlendModeNormal); // BlendState
 	graphicsPipelineStateDesc.RasterizerState = CreateRasterizerState(); // RasterizerState
 	graphicsPipelineStateDesc.DepthStencilState = CreateDepthStencilDesc();
 
@@ -1535,7 +1544,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		0, nullptr, reinterpret_cast<void**>(&indexDataSphere));
 
 	/* /////////////////////////
-		      スプライト
+			  スプライト
 	*/ /////////////////////////
 
 	vertexDataSprite[0].position = { 0.0f, 360.0f, 0.0f, 1.0f };
@@ -1572,7 +1581,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	/// *****************************************************
 	/// Transform情報を作る
 	/// *****************************************************
-	
+
 	Transform transform = { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 	Transform cameraTransform = { {1.0f,1.0f,1.0f}, {0.0f,0.0f,0.0f}, {0.0f, 0.0f, -10.0f} };
 	Transform transformSprite = { {1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f, }, { 0.0f, 0.0f, 0.0f } };
@@ -1586,11 +1595,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	/// ViewportとScissor(シザー)
 	/// *****************************************************
 	// Viewport
-	D3D12_VIEWPORT viewport = 
+	D3D12_VIEWPORT viewport =
 		CreateViwport(kClientWindth, kClientHeight);
 
 	// Scissor
-	D3D12_RECT scissorRect = 
+	D3D12_RECT scissorRect =
 		CreateScissor(kClientWindth, kClientHeight);
 
 #pragma endregion
@@ -1641,7 +1650,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			/// ******************************************************************
 			/// ゲームの処理
 			/// ******************************************************************
-			
+
 			// 開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の初期に置き換える
 			//ImGui::ShowDemoWindow();
 
@@ -1724,18 +1733,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// TransitionBarrierを張る
 			commandList->ResourceBarrier(1, &barrier);
-			
+
 			// 描画先のRTVを設定する
 			commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
 
 			// 描画先のRTVとDSVを設定する
 			commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
-			
+
 			// 指定した色で画面全体をクリアする
 			float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };  // 青っぽい色。RGBAの順
 			commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
 			commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-			
+
 			/// *****************************************************
 			/// ImGuiを
 			/// *****************************************************
@@ -1762,7 +1771,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 			/* /////////////////////////
-			        ModelDataの描画
+					ModelDataの描画
 			*/ ////////////////////////
 
 			// マテリアルCBufferの場所設定
